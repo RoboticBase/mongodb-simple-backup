@@ -16,12 +16,11 @@ logger = getLogger(__name__)
 
 
 class MongoDB:
-    def __init__(self, host, port):
-        self.__host = host
-        self.__port = port
+    def __init__(self, endpoint):
+        self.__endpoint = endpoint
 
     def dump(self):
-        logger.info(f'start dump, host={self.__host}, port={self.__port}')
+        logger.info(f'start dump, endpoint={self.__endpoint}')
         dump_dir = self.__get_dump_dir()
         logger.info(f'exec dump command, dump_dir={dump_dir}')
         self.__exec_dump_cmd(dump_dir)
@@ -35,12 +34,12 @@ class MongoDB:
         return os.path.join(const.DEFAULT_DUMPFILE_DIR, f'{dumpfile_prefix}{dt}')
 
     def __exec_dump_cmd(self, dump_dir):
-        cmd = f'mongodump --host {self.__host} --port {self.__port} -o {dump_dir}'
+        cmd = f'mongodump --host "{self.__endpoint}" -o "{dump_dir}"'
         proc = subprocess.run(cmd.split(),
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
-        logger.info(proc.stdout.decode("utf8"))
-        logger.info(proc.stderr.decode("utf8"))
+        logger.info(proc.stdout.decode('utf8'))
+        logger.info(proc.stderr.decode('utf8'))
 
     def __compress(self, dump_dir):
         dump_file = f'{dump_dir}.tar.gz'

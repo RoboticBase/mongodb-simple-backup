@@ -8,8 +8,7 @@ from src import const
 from src.mongodb import MongoDB
 from src.azure_blob_storage import AzureBlobStorage
 
-mongodb_host = os.environ.get(const.MONGODB_HOST, '')
-mongodb_port = os.environ.get(const.MONGODB_PORT, '')
+mongodb_endpoint = os.environ.get(const.MONGODB_ENDPOINT, '')
 account_name = os.environ.get(const.STORAGE_ACCOUNT, '')
 account_key = os.environ.get(const.ACCOUNT_KEY, '')
 container_name = os.environ.get(const.STORAGE_CONTAINER, '')
@@ -31,9 +30,8 @@ logger = getLogger(__name__)
 
 def main():
     logger.info('start main')
-    dump_file = MongoDB(mongodb_host, mongodb_port).dump()
-    azure_blob = AzureBlobStorage(account_name, account_key)
-    azure_blob.upload(container_name, dump_file)
+    dump_file = MongoDB(mongodb_endpoint).dump()
+    AzureBlobStorage(account_name, account_key).upload(container_name, dump_file)
     logger.info('finish main')
 
 
