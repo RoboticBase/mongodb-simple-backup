@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import distutils.util
 import json
 import logging.config
 from logging import getLogger
@@ -34,16 +35,17 @@ def main():
         account_name = os.environ[const.STORAGE_ACCOUNT]
         account_key = os.environ[const.ACCOUNT_KEY]
         container_name = os.environ[const.STORAGE_CONTAINER]
+        store_oplog = bool(distutils.util.strtobool(os.environ.get(const.STORE_OPLOG, const.DEFAULT_STORE_OPLOG)))
         dumpfile_prefix = os.environ.get(const.DUMPFILE_PREFIX, const.DEFAULT_DUMPFILE_PREFIX)
         tzstr = os.environ.get(const.TIMEZONE, const.DEFAULT_TIMEZONE)
-    except KeyError as e:
+    except (KeyError, ValueError) as e:
         logger.exception(e)
         exit(1)
 
     try:
         tz = pytz.timezone(tzstr)
 
-        dump_file = MongoDB(mongodb_endpoint).dump(dumpfile_prefix, tz)
+        dump_file = MongoDB(mongodb_endpoint, store_oplog).dump(dumpfile_prefix, tz)
         AzureBlobStorage(account_name, account_key).upload(container_name, dump_file)
     except Exception as e:
         logger.exception(e)

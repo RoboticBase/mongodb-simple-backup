@@ -7,8 +7,9 @@ import pytz
 from src.mongodb import MongoDB, const
 
 
+@pytest.mark.parametrize('store_oplog', [True, False])
 @pytest.mark.freeze_time('2018-01-02T03:04:05+09:00')
-def test_get_dump_dir(mocker):
+def test_get_dump_dir(mocker, store_oplog):
     endpoint = 'endpoint'
     dumpfile_prefix = 'test_'
     tz = pytz.timezone('Asia/Tokyo')
@@ -22,12 +23,18 @@ def test_get_dump_dir(mocker):
     mocked_tar = mocker.Mock()
     mocked_tarfileopen.return_value.__enter__.return_value = mocked_tar
 
-    result = MongoDB(endpoint).dump(dumpfile_prefix, tz)
+    result = MongoDB(endpoint, store_oplog).dump(dumpfile_prefix, tz)
 
-    mocked_subprocessrun.assert_called_once_with(
-        ['mongodump', f'--host="{endpoint}"', f'--out="{dump_dir}"', '--oplog'],
-        stdout=PIPE,
-        stderr=PIPE)
+    if store_oplog:
+        mocked_subprocessrun.assert_called_once_with(
+            ['mongodump', f'--host="{endpoint}"', f'--out="{dump_dir}"', '--oplog'],
+            stdout=PIPE,
+            stderr=PIPE)
+    else:
+        mocked_subprocessrun.assert_called_once_with(
+            ['mongodump', f'--host="{endpoint}"', f'--out="{dump_dir}"'],
+            stdout=PIPE,
+            stderr=PIPE)
     mocked_tarfileopen.assert_called_once_with(dump_file, 'w|gz')
     mocked_tar.add.assert_called_once_with(dump_dir, arcname=base_dir)
 

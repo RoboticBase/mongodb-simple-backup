@@ -11,11 +11,12 @@ logger = getLogger(__name__)
 
 
 class MongoDB:
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, store_oplog):
         self.__endpoint = endpoint
+        self.__store_oplog = store_oplog
 
     def dump(self, dumpfile_prefix, tz):
-        logger.info(f'start dump, endpoint={self.__endpoint}')
+        logger.info(f'start dump, endpoint={self.__endpoint}, store_oplog={self.__store_oplog}')
         dump_dir = self.__get_dump_dir(dumpfile_prefix, tz)
         logger.info(f'exec dump command, dump_dir={dump_dir}')
         self.__exec_dump_cmd(dump_dir)
@@ -29,7 +30,10 @@ class MongoDB:
         return os.path.join(const.DEFAULT_DUMPFILE_DIR, f'{dumpfile_prefix}{dt}')
 
     def __exec_dump_cmd(self, dump_dir):
-        cmd = f'mongodump --host="{self.__endpoint}" --out="{dump_dir}" --oplog'
+        cmd = f'mongodump --host="{self.__endpoint}" --out="{dump_dir}"'
+        if self.__store_oplog:
+            cmd += ' --oplog'
+        logger.info(f'dump command="{cmd}"')
         proc = subprocess.run(cmd.split(),
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
