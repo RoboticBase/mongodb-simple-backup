@@ -34,7 +34,7 @@ class MongoDB:
         return os.path.join(const.DEFAULT_DUMPFILE_DIR, f'{dumpfile_prefix}{dt}')
 
     def __exec_dump_cmd(self, dump_dir):
-        cmd = f'mongodump --host "{self.__endpoint}" -o "{dump_dir}"'
+        cmd = f'mongodump --host="{self.__endpoint}" --out="{dump_dir}" --oplog'
         proc = subprocess.run(cmd.split(),
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
