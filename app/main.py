@@ -4,14 +4,12 @@ import logging.config
 from logging import getLogger
 import os
 
+import pytz
+
 from src import const
 from src.mongodb import MongoDB
 from src.azure_blob_storage import AzureBlobStorage
 
-mongodb_endpoint = os.environ.get(const.MONGODB_ENDPOINT, '')
-account_name = os.environ.get(const.STORAGE_ACCOUNT, '')
-account_key = os.environ.get(const.ACCOUNT_KEY, '')
-container_name = os.environ.get(const.STORAGE_CONTAINER, '')
 
 try:
     with open(const.LOGGING_JSON, "r") as f:
@@ -30,10 +28,28 @@ logger = getLogger(__name__)
 
 def main():
     logger.info('start main')
-    dump_file = MongoDB(mongodb_endpoint).dump()
-    AzureBlobStorage(account_name, account_key).upload(container_name, dump_file)
-    logger.info('finish main')
 
+    try:
+        mongodb_endpoint = os.environ[const.MONGODB_ENDPOINT]
+        account_name = os.environ[const.STORAGE_ACCOUNT]
+        account_key = os.environ[const.ACCOUNT_KEY]
+        container_name = os.environ[const.STORAGE_CONTAINER]
+        dumpfile_prefix = os.environ.get(const.DUMPFILE_PREFIX, const.DEFAULT_DUMPFILE_PREFIX)
+        tzstr = os.environ.get(const.TIMEZONE, const.DEFAULT_TIMEZONE)
+    except KeyError as e:
+        logger.exception(e)
+        exit(1)
+
+    try:
+        tz = pytz.timezone(tzstr)
+
+        dump_file = MongoDB(mongodb_endpoint).dump(dumpfile_prefix, tz)
+        AzureBlobStorage(account_name, account_key).upload(container_name, dump_file)
+    except Exception as e:
+        logger.exception(e)
+        exit(1)
+
+    logger.info('finish main')
 
 if __name__ == '__main__':
     main()

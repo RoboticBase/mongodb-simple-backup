@@ -4,13 +4,8 @@ import os
 import subprocess
 import tarfile
 
-import pytz
-
 from src import const
 
-dumpfile_prefix = os.environ.get(const.DUMPFILE_PREFIX, const.DEFAULT_DUMPFILE_PREFIX)
-tzstr = os.environ.get(const.TIMEZONE, const.DEFAULT_TIMEZONE)
-tz = pytz.timezone(tzstr)
 
 logger = getLogger(__name__)
 
@@ -19,9 +14,9 @@ class MongoDB:
     def __init__(self, endpoint):
         self.__endpoint = endpoint
 
-    def dump(self):
+    def dump(self, dumpfile_prefix, tz):
         logger.info(f'start dump, endpoint={self.__endpoint}')
-        dump_dir = self.__get_dump_dir()
+        dump_dir = self.__get_dump_dir(dumpfile_prefix, tz)
         logger.info(f'exec dump command, dump_dir={dump_dir}')
         self.__exec_dump_cmd(dump_dir)
         logger.info(f'compress dump dir, dump_dir={dump_dir}')
@@ -29,7 +24,7 @@ class MongoDB:
         logger.info(f'finish dump, dump_file={dump_file}')
         return dump_file
 
-    def __get_dump_dir(self):
+    def __get_dump_dir(self, dumpfile_prefix, tz):
         dt = datetime.datetime.now(tz=tz).strftime('%Y%m%d%H%M%S%Z')
         return os.path.join(const.DEFAULT_DUMPFILE_DIR, f'{dumpfile_prefix}{dt}')
 
